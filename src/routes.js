@@ -15,7 +15,9 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import Dashboard from "services/dashboard/Dashboard.service.js";
+import DashboardService from "services/dashboard/Dashboard.service";
+import Client from "services/client/Client.service.js";
+
 import UserProfile from "views/UserProfile.js";
 import TableList from "views/TableList.js";
 import Typography from "views/Typography.js";
@@ -34,11 +36,19 @@ const dashboardRoutes = [
     layout: "/admin"
   },
   {
-    path: "/dashboard",
+    path: "/home",
     name: "Dashboard",
     icon: "nc-icon nc-chart-pie-35",
-    component: Dashboard,
+    component: DashboardService,
     layout: "/admin"
+  },
+  {
+    path: '/client/:clientId', // Assuming you want a dynamic parameter for the client ID
+    name: 'Client',
+    icon: 'nc-icon nc-single-02', // You can replace this with an appropriate icon
+    component: Client,
+    layout: '/admin',
+    hidden: true, // Optional: If you want to hide it from the navigation menu
   },
   {
     path: "/user",
