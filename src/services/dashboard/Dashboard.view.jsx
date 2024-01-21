@@ -2,32 +2,28 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Table, Container, Row, Col, Card } from 'react-bootstrap';
 import ReactPaginate from 'react-paginate';
-import './Dashboard.css'; // Import your custom styles
+import './Dashboard.css';
 
-function DashboardView({ data, loading, onPageChange, onPerPageChange, perPage }) {
-  const [currentPage, setCurrentPage] = useState({ value: 1 });
+function DashboardView({ data, loading, onPageChange, onPerPageChange, perPage, currentPageProp }) {
+  const [currentPage, setCurrentPage] = useState(currentPageProp);
 
   useEffect(() => {
-    setCurrentPage({ value: 1 }); // Reset currentPage state when component receives new data
-  }, [data]);
+    setCurrentPage(currentPageProp);
+  }, [data, currentPageProp]);
 
   const handlePageChange = (selected) => {
-    const newPage = selected + 1;
-    setCurrentPage({ value: newPage });
-    onPageChange(newPage);
+    setCurrentPage(selected.selected + 1);
+    onPageChange(selected.selected + 1);
   };
 
   const handlePerPageChange = (e) => {
     const newPerPage = parseInt(e.target.value, 10);
     onPerPageChange(newPerPage);
-    debugger;
-    setCurrentPage({ value: 1 }); // Reset to the first page when changing the limit
   };
 
-  // Check if data is an array and has the expected structure
   const tableRows = useMemo(() => {
     if (!data || !data.data || !Array.isArray(data.data)) {
-      return null; // Return null if the data structure is not as expected
+      return null;
     }
 
     return data.data.map((client) => (
@@ -45,7 +41,6 @@ function DashboardView({ data, loading, onPageChange, onPerPageChange, perPage }
     ));
   }, [data]);
 
-  // Return a message if the data structure is not as expected
   if (!tableRows) {
     return <div>Data structure is not as expected.</div>;
   }
@@ -82,18 +77,18 @@ function DashboardView({ data, loading, onPageChange, onPerPageChange, perPage }
                   <ReactPaginate
                     pageCount={totalPages}
                     pageRangeDisplayed={3}
-                    marginPagesDisplayed={1}
+                    marginPagesDisplayed={3}
                     onPageChange={handlePageChange}
                     containerClassName={'pagination'}
                     activeClassName={'active'}
                     previousLabel={'Previous'}
                     nextLabel={'Next'}
+                    initialPage={currentPage - 1}
                   />
                   <select onChange={handlePerPageChange} value={perPage}>
                     <option value={5}>5 per page</option>
                     <option value={10}>10 per page</option>
                     <option value={20}>20 per page</option>
-                    {/* Add more options as needed */}
                   </select>
                 </div>
               </Card.Footer>

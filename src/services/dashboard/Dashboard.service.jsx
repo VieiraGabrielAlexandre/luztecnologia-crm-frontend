@@ -41,7 +41,7 @@ function DashboardService() {
 
   const handlePerPageChange = (newPerPage) => {
     setPerPage(newPerPage);
-    setCurrentPage(1); // Reset to the first page when changing the limit
+    setCurrentPage(1)
   };
 
   return (
@@ -57,6 +57,7 @@ function DashboardService() {
           onPageChange={handlePageChange}
           onPerPageChange={handlePerPageChange}
           perPage={perPage}
+          currentPageProp={currentPage}
         />
       ) : null}
     </div>
