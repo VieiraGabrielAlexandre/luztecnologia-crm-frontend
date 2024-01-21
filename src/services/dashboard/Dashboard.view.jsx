@@ -41,6 +41,14 @@ function DashboardView({ data, loading, onPageChange, onPerPageChange, perPage, 
     ));
   }, [data]);
 
+  const totalClientes = useMemo(() => {
+
+    return (
+        <span>{data.meta.total}</span>
+    );
+  }, [data]);
+
+
   if (!tableRows) {
     return <div>Data structure is not as expected.</div>;
   }
@@ -50,6 +58,27 @@ function DashboardView({ data, loading, onPageChange, onPerPageChange, perPage, 
   return (
     <>
       <Container fluid>
+        <Row>
+          <Col lg="3" sm="6">
+            <Card className="card-stats">
+              <Card.Body>
+                <Row>
+                  <Col xs="5">
+                    <div className="icon-big text-center icon-warning">
+                      <i className="nc-icon nc-chart text-warning"></i>
+                    </div>
+                  </Col>
+                  <Col xs="7">
+                    <div className="numbers">
+                      <p className="card-category">Qtd. Clientes</p>
+                      <Card.Title as="h4">{totalClientes}</Card.Title>
+                    </div>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
         <Row>
           <Col md="12">
             <Card className="strpied-tabled-with-hover">
