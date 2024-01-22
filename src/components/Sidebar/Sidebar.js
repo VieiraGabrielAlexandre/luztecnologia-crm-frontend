@@ -51,6 +51,7 @@ function Sidebar({ color, image, routes }) {
         </div>
         <Nav>
           {routes.map((prop, key) => {
+                if (!prop.redirect && !prop.hidden) {  // Add check for 'hidden' property
             if (!prop.redirect)
               return (
                 <li
@@ -72,7 +73,9 @@ function Sidebar({ color, image, routes }) {
                 </li>
               );
             return null;
+                }
           })}
+
         </Nav>
       </div>
     </div>

@@ -34,8 +34,7 @@ function DashboardView({ data, loading, onPageChange, onPerPageChange, perPage, 
         <td>{client.due_date}</td>
         <td>{client.contact.email}</td>
         <td>
-          <a href={`#edit-${client.ID}`}>Editar</a> |{' '}
-          <a href={`#delete-${client.ID}`}>Excluir</a>
+          <a href={`#edit-${client.ID}`}>Editar</a>
         </td>
       </tr>
     ));
