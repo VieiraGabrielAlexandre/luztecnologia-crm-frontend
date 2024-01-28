@@ -16,10 +16,11 @@
 
 */
 import DashboardService from "objects/dashboard/Dashboard.service";
-import Client from "objects/client/Client.service.jsx";
-import ClientDetail from "objects/client/detail/ClientDetail.service.jsx";
+import Client from "objects/client/Client.service";
+import ClientDetail from "objects/client/detail/ClientDetail.service";
+import ClientCreate from "objects/client/create/ClientCreate.service";
 
-import UserProfile from "views/UserProfile.js";
+
 import TableList from "views/TableList.js";
 import Typography from "views/Typography.js";
 import Icons from "views/Icons.js";
@@ -59,11 +60,11 @@ const dashboardRoutes = [
     hidden: true, // Optional: If you want to hide it from the navigation menu
   },
   {
-    path: "/user",
-    name: "User Profile",
-    icon: "nc-icon nc-circle-09",
-    component: UserProfile,
-    layout: "/admin"
+    path: '/create/client', // Assuming you want a dynamic parameter for the client ID
+    icon: 'nc-icon nc-single-02', // You can replace this with an appropriate icon
+    component: ClientCreate,
+    layout: '/admin',
+    hidden: true, // Optional: If you want to hide it from the navigation menu
   },
   {
     path: "/table",

@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { useHistory } from "react-router-dom";
+import React, { useState } from "react";
 import {
   Badge,
   Button,
@@ -7,56 +6,10 @@ import {
   Form,
   Container,
   Row,
-  Col,
-  Alert,
+  Col
 } from "react-bootstrap";
 
-function ClientDetailView({ data, loading }) {
-  const {
-    name = data.name || "",
-    name_social = data.name_social || "",
-    contact = {
-      email: data.contact.email,
-      phone: data.contact.phone
-    },
-    cnpj = data.cnpj,
-    address: initialAddress = {
-      cep: data.address?.cep || "",
-      logradouro: data.address?.logradouro || "",
-      bairro: data.address?.bairro || "",
-      localidade: data.address?.localidade || "",
-      uf: data.address?.uf || "",
-      complement: data.address?.complement || ""
-    },
-    monthly_value = data.monthly_value || 0,
-    due_date = data.due_date || "",
-    calc = {
-      number_clients: data.calc.number_clients,
-      value: data.calc.value
-    }
-  } = data || {};
-
-  const formatCEP = (cep) => {
-    if (!cep) return "";
-    return cep.replace(/^(\d{5})(\d{3})$/, "$1-$2");
-  };
-
-  const formatPhone = (phone) => {
-    if (!phone) return "";
-
-    const match = phone.match(/^(\d{2})(\d{5})(\d{4})$/);
-
-    if (match) {
-      const areaCode = match[1];
-      const prefix = match[2];
-      const lineNumber = match[3];
-
-      return `(${areaCode}) ${prefix}-${lineNumber}`;
-    }
-
-    return phone;
-  };
-
+function ClientCreateView() {
   const [formData, setFormData] = useState({
     name,
     name_social,
@@ -67,61 +20,45 @@ function ClientDetailView({ data, loading }) {
     },
     monthly_value,
     due_date,
-    address: { ...initialAddress },
+    address: { 
+      cep: address.cep,
+      logradouro: address.logradouro,
+      bairro: address.bairro,
+      localidade: address.localidade,
+      uf: address.uf,
+      complement: address.complement,
+     },
     calc,
   });
 
-  const [showAlert, setShowAlert] = useState(false);
-
-  const history = useHistory();
-
-  useEffect(() => {
-    if (showAlert) {
-      const alertTimeout = setTimeout(() => {
-        setShowAlert(false);
-      }, 5000); // Adjust the duration as needed (5 seconds in this example)
-
-      return () => {
-        clearTimeout(alertTimeout);
-      };
-    }
-  }, [showAlert]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleCEPChange = async (event) => {
-    const enteredCEP = event.target.value.replace(/\D/g, ""); // Remove non-numeric characters
-    if (enteredCEP.length === 8) {
+  const handleCEPChange = async (e) => {
+    const cep = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+    if (cep.length === 8) {
       try {
-        const response = await fetch(`http://localhost:3001/api/address/${enteredCEP}`);
-        if (response.ok) {
-          const result = await response.json();
-          setFormData((prevData) => ({
-            ...prevData,
-            address: {
-              ...prevData.address,
-              logradouro: result.data.logradouro || "",
-              bairro: result.data.bairro || "",
-              localidade: result.data.localidade || "",
-              uf: result.data.uf || "",
-            },
-          }));
-        } else {
-          console.error("Failed to fetch address data");
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch address details. Status: ${response.status}`);
         }
+        const data = await response.json();
+        const { logradouro, bairro, localidade, uf } = data;
+        setFormData({
+          ...formData,
+          cep,
+          logradouro,
+          bairro,
+          localidade,
+          uf,
+        });
       } catch (error) {
-        console.error("Error fetching address data:", error);
+        console.error("Error fetching address details:", error.message);
       }
     }
   };
-
-  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -145,7 +82,7 @@ function ClientDetailView({ data, loading }) {
         // Set a timer to hide the alert and redirect
         setTimeout(() => {
           setShowAlert(false);
-          history.push("/client-list"); // Update the route as needed
+          window.location.reload(false);        
         }, 5000); // Adjust the duration as needed (5 seconds in this example)
 
       } else {
@@ -165,7 +102,7 @@ function ClientDetailView({ data, loading }) {
           <Col>
             <Card>
               <Card.Header>
-                <Card.Title as="h4">Editar/Visualizar - Cliente</Card.Title>
+                <Card.Title as="h4">Criar - Cliente</Card.Title>
               </Card.Header>
               <Card.Body>
                 <Form onSubmit={handleSubmit}>
@@ -176,10 +113,10 @@ function ClientDetailView({ data, loading }) {
                         <Form.Control
                           placeholder="Nome Fantasia"
                           type="text"
-                          name="name"
-                          value={formData.name}
+                          name="nomeFantasia"
+                          value={formData.nomeFantasia}
                           onChange={handleInputChange}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
                     <Col className="px-1" md="3">
@@ -188,10 +125,10 @@ function ClientDetailView({ data, loading }) {
                         <Form.Control
                           placeholder="Razão Social"
                           type="text"
-                          name="name_social"
-                          value={formData.name_social}
+                          name="razaoSocial"
+                          value={formData.razaoSocial}
                           onChange={handleInputChange}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
                     <Col className="pl-1" md="4">
@@ -200,16 +137,15 @@ function ClientDetailView({ data, loading }) {
                         <Form.Control
                           placeholder="E-mail"
                           type="email"
-                          name="contact.email"
-                          value={formData.contact.email}
+                          name="contatoEmail"
+                          value={formData.contatoEmail}
                           onChange={handleInputChange}
-                          isInvalid={!isValidEmail(formData.contact.email)}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
                   </Row>
                   <Row>
-                    <Col className="pr-1" md="6">
+                    <Col className="pr-1" md="4">
                       <Form.Group>
                         <label>CNPJ</label>
                         <Form.Control
@@ -218,20 +154,20 @@ function ClientDetailView({ data, loading }) {
                           name="cnpj"
                           value={formData.cnpj}
                           onChange={handleInputChange}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
-                    <Col className="pl-1" md="6">
+                    <Col className="pl-1" md="4">
                       <Form.Group>
                         <label>Telefone</label>
                         <Form.Control
                           placeholder="Telefone"
                           type="phone"
-                          name="contact.phone"
-                          value={formatPhone(formData.contact.phone)}
                           maxLength="15"
+                          name="telefone"
+                          value={formData.telefone}
                           onChange={handleInputChange}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -243,10 +179,10 @@ function ClientDetailView({ data, loading }) {
                           placeholder="CEP"
                           type="text"
                           maxLength="9"
-                          name="address.cep"
-                          value={formatCEP(formData.address.cep)}
+                          name="cep"
+                          value={formData.cep}
                           onChange={handleCEPChange}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
                     <Col className="px-1" md="4">
@@ -255,10 +191,10 @@ function ClientDetailView({ data, loading }) {
                         <Form.Control
                           placeholder="Logradouro"
                           type="text"
-                          name="address.logradouro"
-                          value={formData.address.logradouro}
+                          name="logradouro"
+                          value={formData.logradouro}
                           onChange={handleInputChange}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
                     <Col className="pl-1" md="4">
@@ -267,10 +203,10 @@ function ClientDetailView({ data, loading }) {
                         <Form.Control
                           placeholder="Bairro"
                           type="text"
-                          name="address.bairro"
-                          value={formData.address.bairro}
+                          name="bairro"
+                          value={formData.bairro}
                           onChange={handleInputChange}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -281,10 +217,10 @@ function ClientDetailView({ data, loading }) {
                         <Form.Control
                           placeholder="Localidade"
                           type="text"
-                          name="address.localidade"
-                          value={formData.address.localidade}
+                          name="localidade"
+                          value={formData.localidade}
                           onChange={handleInputChange}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
                     <Col className="px-1" md="4">
@@ -293,10 +229,10 @@ function ClientDetailView({ data, loading }) {
                         <Form.Control
                           placeholder="UF"
                           type="text"
-                          name="address.uf"
-                          value={formData.address.uf}
+                          name="uf"
+                          value={formData.uf}
                           onChange={handleInputChange}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
                     <Col className="pl-1" md="4">
@@ -305,10 +241,10 @@ function ClientDetailView({ data, loading }) {
                         <Form.Control
                           placeholder="Complemento"
                           type="text"
-                          name="address.complement"
-                          value={formData.address.complement}
+                          name="complemento"
+                          value={formData.complemento}
                           onChange={handleInputChange}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -319,10 +255,10 @@ function ClientDetailView({ data, loading }) {
                         <Form.Control
                           placeholder="Quantidade de clientes"
                           type="number"
-                          name="calc.number_clients"
-                          value={formData.calc.number_clients}
+                          name="quantidadeClientes"
+                          value={formData.quantidadeClientes}
                           onChange={handleInputChange}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
                     <Col className="px-1" md="4">
@@ -332,10 +268,10 @@ function ClientDetailView({ data, loading }) {
                           placeholder="Valor mensal"
                           type="number"
                           step="0.1"
-                          name="monthly_value"
-                          value={formData.monthly_value}
+                          name="valorMensal"
+                          value={formData.valorMensal}
                           onChange={handleInputChange}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
                     <Col className="pl-1" md="4">
@@ -344,10 +280,10 @@ function ClientDetailView({ data, loading }) {
                         <Form.Control
                           placeholder="Dia de vencimento"
                           type="number"
-                          name="due_date"
-                          value={formData.due_date}
+                          name="diaVencimento"
+                          value={formData.diaVencimento}
                           onChange={handleInputChange}
-                        />
+                        ></Form.Control>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -356,27 +292,10 @@ function ClientDetailView({ data, loading }) {
                     type="submit"
                     variant="info"
                   >
-                    Update Profile
+                    Criar Cliente
                   </Button>
                   <div className="clearfix"></div>
                 </Form>
-                {showAlert && (
-                  <Alert variant="success">
-                    <button
-                      aria-hidden={true}
-                      className="close"
-                      data-dismiss="alert"
-                      type="button"
-                      onClick={() => setShowAlert(false)}
-                    >
-                      <i className="nc-icon nc-simple-remove"></i>
-                    </button>
-                    <span>
-                      <b>Success -</b>
-                      This is a regular notification made with ".alert-success"
-                    </span>
-                  </Alert>
-                )}
               </Card.Body>
             </Card>
           </Col>
@@ -386,4 +305,4 @@ function ClientDetailView({ data, loading }) {
   );
 }
 
-export default ClientDetailView;
+export default ClientCreateView;

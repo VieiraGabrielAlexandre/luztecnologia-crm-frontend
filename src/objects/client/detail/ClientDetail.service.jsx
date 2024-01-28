@@ -1,7 +1,7 @@
 // ClienteService.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import ClientDetailView from './ClientDetail.view';
+import ClientDetailView from "./ClientDetail.view";
 
 function ClienteService() {
   const { id } = useParams();
@@ -42,7 +42,7 @@ function ClienteService() {
       ) : error ? (
         <div>Error: {error}</div>
       ) : data !== null ? (
-        <ClientDetailView data={data || []} loading={loading} />
+        <ClientDetailView data={data.data || []} loading={loading} />
       ) : null}
     </div>
   );

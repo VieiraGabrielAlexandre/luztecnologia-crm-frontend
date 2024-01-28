@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Table, Container, Row, Col, Card } from 'react-bootstrap';
 import ReactPaginate from 'react-paginate';
 import './Client.css';
+import { Link } from 'react-router-dom';
 
 function ClienteView({ data, loading, onPageChange, onPerPageChange, perPage, currentPageProp }) {
   const [currentPage, setCurrentPage] = useState(currentPageProp);
@@ -58,6 +59,9 @@ function ClienteView({ data, loading, onPageChange, onPerPageChange, perPage, cu
                 <p className="card-category">Todos</p>
               </Card.Header>
               <Card.Body className="table-full-width table-responsive px-0">
+              <Link to="/admin/create/client">
+                <button className="btn-wd mr-1 btn btn-primary">Novo</button  >
+              </Link>
                 <Table className="table-hover table-striped">
                   <thead>
                     <tr>

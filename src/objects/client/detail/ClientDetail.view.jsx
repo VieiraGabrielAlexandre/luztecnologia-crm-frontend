@@ -1,141 +1,362 @@
-import React from "react";
-
-// react-bootstrap components
+import React, { useState, useEffect } from "react";
+import { useHistory } from "react-router-dom";
 import {
   Badge,
   Button,
   Card,
   Form,
-  Navbar,
-  Nav,
   Container,
   Row,
-  Col
+  Col,
+  Alert,
 } from "react-bootstrap";
 
-function ClientDetailView({data, loading}) {
+function ClientDetailView({ data, loading }) {
+  const {
+    name = data.name || "",
+    name_social = data.name_social || "",
+    contact = {
+      email: data.contact.email,
+      phone: data.contact.phone
+    },
+    cnpj = data.cnpj,
+    address = {
+      cep: data.address?.cep || "",
+      logradouro: data.address?.logradouro || "",
+      bairro: data.address?.bairro || "",
+      localidade: data.address?.localidade || "",
+      uf: data.address?.uf || "",
+      complement: data.address?.complement || ""
+    },
+    monthly_value = data.monthly_value || 0,
+    due_date = data.due_date || "",
+    calc = {
+      number_clients: data.calc.number_clients,
+      value: data.calc.value
+    }
+  } = data || {};
+
+  const formatCEP = (cep) => {
+    if (!cep) return "";
+    return cep.replace(/^(\d{5})(\d{3})$/, "$1-$2");
+  };
+
+  const [formData, setFormData] = useState({
+    name,
+    name_social,
+    cnpj,
+    contact: {
+      email: contact.email,
+      phone: contact.phone,
+    },
+    monthly_value,
+    due_date,
+    address: { 
+      cep: address.cep,
+      logradouro: address.logradouro,
+      bairro: address.bairro,
+      localidade: address.localidade,
+      uf: address.uf,
+      complement: address.complement,
+     },
+    calc,
+  });
+
+  const [showAlert, setShowAlert] = useState(false);
+  const [loadingNotification, setLoadingNotification] = useState(false);
+
+  const history = useHistory();
+
+  useEffect(() => {
+    if (showAlert) {
+      setLoadingNotification(true);
+
+      const alertTimeout = setTimeout(() => {
+        setLoadingNotification(false);
+        setShowAlert(false);
+        history.push("/client-list"); // Update the route as needed
+      }, 5000); // Adjust the duration as needed (5 seconds in this example)
+
+      return () => {
+        clearTimeout(alertTimeout);
+      };
+    }
+  }, [showAlert]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+  
+    if (name.includes('.')) {
+      const [nestedKey, nestedProp] = name.split('.');
+      setFormData((prevData) => ({
+        ...prevData,
+        [nestedKey]: {
+          ...prevData[nestedKey],
+          [nestedProp]: value,
+        },
+      }));
+    } else {
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
+    }
+  };
+
+  const handleCEPChange = async (event) => {
+    const enteredCEP = event.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+    if (enteredCEP.length === 8) {
+      try {
+        const response = await fetch(`http://localhost:3001/api/address/${enteredCEP}`);
+        if (response.ok) {
+          const result = await response.json();
+          setFormData((prevData) => ({
+            ...prevData,
+            address: {
+              ...prevData.address,
+              cep: formatCEP(enteredCEP), // Update the CEP here
+              logradouro: result.data.logradouro || "",
+              bairro: result.data.bairro || "",
+              localidade: result.data.localidade || "",
+              uf: result.data.uf || "",
+            },
+          }));
+        } else {
+          console.error("Failed to fetch address data");
+        }
+      } catch (error) {
+        console.error("Error fetching address data:", error);
+      }
+    }
+  };  
+
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    try {
+      const response = await fetch("http://localhost:3001/api/clients", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Request successful:", result);
+
+        // Show success alert
+        setShowAlert(true);
+
+        // Set a timer to hide the alert and redirect
+        setTimeout(() => {
+          setShowAlert(false);
+          window.location.reload(false);        
+        }, 5000); // Adjust the duration as needed (5 seconds in this example)
+
+      } else {
+        console.error("Request failed with status:", response.status);
+        // Handle errors or failed requests
+      }
+    } catch (error) {
+      console.error("Error during the request:", error);
+      // Handle network errors or other exceptions
+    }
+  };
+
   return (
     <>
       <Container fluid>
         <Row>
-          <Col md="8">
+          <Col>
             <Card>
               <Card.Header>
-                <Card.Title as="h4">Edit Profile</Card.Title>
+                <Card.Title as="h4">Editar/Visualizar - Cliente</Card.Title>
               </Card.Header>
               <Card.Body>
-                <Form>
+                <Form onSubmit={handleSubmit}>
                   <Row>
                     <Col className="pr-1" md="5">
                       <Form.Group>
-                        <label>Company (disabled)</label>
+                        <label>Nome Fantasia</label>
                         <Form.Control
-                          defaultValue="Creative Code Inc."
-                          disabled
-                          placeholder="Company"
+                          placeholder="Nome Fantasia"
                           type="text"
-                        ></Form.Control>
+                          name="name"
+                          value={formData.name}
+                          onChange={handleInputChange}
+                        />
                       </Form.Group>
                     </Col>
                     <Col className="px-1" md="3">
                       <Form.Group>
-                        <label>CLientDetailViewname</label>
+                        <label>Razão Social</label>
                         <Form.Control
-                          defaultValue="michael23"
-                          placeholder="CLientDetailViewname"
+                          placeholder="Razão Social"
                           type="text"
-                        ></Form.Control>
+                          name="name_social"
+                          value={formData.name_social}
+                          onChange={handleInputChange}
+                        />
                       </Form.Group>
                     </Col>
                     <Col className="pl-1" md="4">
                       <Form.Group>
-                        <label htmlFor="exampleInputEmail1">
-                          Email address
-                        </label>
+                        <label htmlFor="Contato">Contato</label>
                         <Form.Control
-                          placeholder="Email"
+                          placeholder="E-mail"
                           type="email"
-                        ></Form.Control>
+                          name="contact.email"
+                          value={formData.contact.email}
+                          onChange={handleInputChange}
+                          isInvalid={!isValidEmail(formData.contact.email)}
+                        />
                       </Form.Group>
                     </Col>
                   </Row>
                   <Row>
                     <Col className="pr-1" md="6">
                       <Form.Group>
-                        <label>First Name</label>
+                        <label>CNPJ</label>
                         <Form.Control
-                          defaultValue="Mike"
-                          placeholder="Company"
+                          placeholder="CNPJ"
                           type="text"
-                        ></Form.Control>
+                          name="cnpj"
+                          value={formData.cnpj}
+                          onChange={handleInputChange}
+                        />
                       </Form.Group>
                     </Col>
                     <Col className="pl-1" md="6">
                       <Form.Group>
-                        <label>Last Name</label>
+                        <label>Telefone</label>
                         <Form.Control
-                          defaultValue="Andrew"
-                          placeholder="Last Name"
-                          type="text"
-                        ></Form.Control>
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col md="12">
-                      <Form.Group>
-                        <label>Address</label>
-                        <Form.Control
-                          defaultValue="Bld Mihail Kogalniceanu, nr. 8 Bl 1, Sc 1, Ap 09"
-                          placeholder="Home Address"
-                          type="text"
-                        ></Form.Control>
+                          placeholder="Telefone"
+                          type="phone"
+                          name="contact.phone"
+                          value={formatPhone(formData.contact.phone)}
+                          maxLength="15"
+                          onChange={handleInputChange}
+                        />
                       </Form.Group>
                     </Col>
                   </Row>
                   <Row>
                     <Col className="pr-1" md="4">
                       <Form.Group>
-                        <label>City</label>
+                        <label>CEP</label>
                         <Form.Control
-                          defaultValue="Mike"
-                          placeholder="City"
+                          placeholder="CEP"
                           type="text"
-                        ></Form.Control>
+                          maxLength="9"
+                          name="address.cep"
+                          value={formatCEP(formData.address.cep)}
+                          onChange={handleCEPChange}
+                        />
                       </Form.Group>
                     </Col>
                     <Col className="px-1" md="4">
                       <Form.Group>
-                        <label>Country</label>
+                        <label>Logradouro</label>
                         <Form.Control
-                          defaultValue="Andrew"
-                          placeholder="Country"
+                          placeholder="Logradouro"
                           type="text"
-                        ></Form.Control>
+                          name="address.logradouro"
+                          value={formData.address.logradouro}
+                          onChange={handleInputChange}
+                        />
                       </Form.Group>
                     </Col>
                     <Col className="pl-1" md="4">
                       <Form.Group>
-                        <label>Postal Code</label>
+                        <label>Bairro</label>
                         <Form.Control
-                          placeholder="ZIP Code"
-                          type="number"
-                        ></Form.Control>
+                          placeholder="Bairro"
+                          type="text"
+                          name="address.bairro"
+                          value={formData.address.bairro}
+                          onChange={handleInputChange}
+                        />
                       </Form.Group>
                     </Col>
                   </Row>
                   <Row>
-                    <Col md="12">
+                    <Col className="pr-1" md="4">
                       <Form.Group>
-                        <label>About Me</label>
+                        <label>Localidade</label>
                         <Form.Control
-                          cols="80"
-                          defaultValue="Lamborghini Mercy, Your chick she so thirsty, I'm in
-                          that two seat Lambo."
-                          placeholder="Here can be your description"
-                          rows="4"
-                          as="textarea"
-                        ></Form.Control>
+                          placeholder="Localidade"
+                          type="text"
+                          name="address.localidade"
+                          value={formData.address.localidade}
+                          onChange={handleInputChange}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col className="px-1" md="4">
+                      <Form.Group>
+                        <label>UF</label>
+                        <Form.Control
+                          placeholder="UF"
+                          type="text"
+                          name="address.uf"
+                          value={formData.address.uf}
+                          onChange={handleInputChange}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col className="pl-1" md="4">
+                      <Form.Group>
+                        <label>Complemento</label>
+                        <Form.Control
+                          placeholder="Complemento"
+                          type="text"
+                          name="address.complement"
+                          value={formData.address.complement}
+                          onChange={handleInputChange}
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col className="pr-1" md="4">
+                      <Form.Group>
+                        <label>Quantidade de clientes</label>
+                        <Form.Control
+                          placeholder="Quantidade de clientes"
+                          type="number"
+                          name="calc.number_clients"
+                          value={formData.calc.number_clients}
+                          onChange={handleInputChange}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col className="px-1" md="4">
+                      <Form.Group>
+                        <label>Valor mensal (R$)</label>
+                        <Form.Control
+                          placeholder="Valor mensal"
+                          type="number"
+                          step="0.1"
+                          name="monthly_value"
+                          value={formData.monthly_value}
+                          onChange={handleInputChange}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col className="pl-1" md="4">
+                      <Form.Group>
+                        <label>Dia de vencimento</label>
+                        <Form.Control
+                          placeholder="Dia de vencimento"
+                          type="number"
+                          name="due_date"
+                          value={formData.due_date}
+                          onChange={handleInputChange}
+                        />
                       </Form.Group>
                     </Col>
                   </Row>
@@ -151,62 +372,26 @@ function ClientDetailView({data, loading}) {
               </Card.Body>
             </Card>
           </Col>
-          <Col md="4">
-            <Card className="card-CLientDetailView">
-              <div className="card-image">
-                <img
-                  alt="..."
-                  src={require("assets/img/photo-1431578500526-4d9613015464.jpeg")}
-                ></img>
-              </div>
-              <Card.Body>
-                <div className="author">
-                  <a href="#pablo" onClick={(e) => e.preventDefault()}>
-                    <img
-                      alt="..."
-                      className="avatar border-gray"
-                      src={require("assets/img/faces/face-3.jpg")}
-                    ></img>
-                    <h5 className="title">Mike Andrew</h5>
-                  </a>
-                  <p className="description">michael24</p>
-                </div>
-                <p className="description text-center">
-                  "Lamborghini Mercy <br></br>
-                  Your chick she so thirsty <br></br>
-                  I'm in that two seat Lambo"
-                </p>
-              </Card.Body>
-              <hr></hr>
-              <div className="button-container mr-auto ml-auto">
-                <Button
-                  className="btn-simple btn-icon"
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                  variant="link"
-                >
-                  <i className="fab fa-facebook-square"></i>
-                </Button>
-                <Button
-                  className="btn-simple btn-icon"
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                  variant="link"
-                >
-                  <i className="fab fa-twitter"></i>
-                </Button>
-                <Button
-                  className="btn-simple btn-icon"
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                  variant="link"
-                >
-                  <i className="fab fa-google-plus-square"></i>
-                </Button>
-              </div>
-            </Card>
-          </Col>
         </Row>
+        {showAlert && (
+          <Alert
+            variant="success"
+            show={loadingNotification}
+            onClose={() => setShowAlert(false)}
+          >
+            <span>
+              {!loadingNotification ? (
+                <>
+                  <b>Carregando... -</b>
+                </>
+              ) : (
+                <>
+                  <b>Sucesso -</b> Redirecionando para listagem
+                </>
+              )}
+            </span>
+          </Alert>
+        )}
       </Container>
     </>
   );
