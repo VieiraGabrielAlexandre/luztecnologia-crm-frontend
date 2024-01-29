@@ -42,16 +42,16 @@ function ClientCreateView() {
         ...prevData,
         [nestedKey]: {
           ...prevData[nestedKey],
-          [nestedProp]: nestedProp === 'due_date' ? Number(value) : value,
+          [nestedProp]: ['due_date', 'value', 'number_clients'].includes(nestedProp) ? Number(value) : value,
         },
       }));
     } else {
       setFormData((prevData) => ({
         ...prevData,
-        [name]: name === 'due_date' ? Number(value) : value,
+        [name]: ['due_date', 'calc.value', 'calc.number_clients'].includes(name) ? Number(value) : value,
       }));
-    };
-  };
+    }
+  };  
   
 
   const handleCEPChange = async (event) => {
