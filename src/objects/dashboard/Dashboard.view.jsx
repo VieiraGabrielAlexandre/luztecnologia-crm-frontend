@@ -1,10 +1,17 @@
 // DashboardView.jsx
-import React, { useState, useEffect, useMemo } from 'react';
-import { Table, Container, Row, Col, Card } from 'react-bootstrap';
-import ReactPaginate from 'react-paginate';
-import './Dashboard.css';
+import React, { useState, useEffect, useMemo } from "react";
+import { Table, Container, Row, Col, Card } from "react-bootstrap";
+import ReactPaginate from "react-paginate";
+import "./Dashboard.css";
 
-function DashboardView({ data, loading, onPageChange, onPerPageChange, perPage, currentPageProp }) {
+function DashboardView({
+  data,
+  loading,
+  onPageChange,
+  onPerPageChange,
+  perPage,
+  currentPageProp,
+}) {
   const [currentPage, setCurrentPage] = useState(currentPageProp);
 
   useEffect(() => {
@@ -34,19 +41,15 @@ function DashboardView({ data, loading, onPageChange, onPerPageChange, perPage, 
         <td>{client.due_date}</td>
         <td>{client.contact.email}</td>
         <td>
-          <a href={`#edit-${client.ID}`}>Editar</a>
+          <a href={`/admin/client/${client.ID}`}>Editar</a> | 2{" "}
         </td>
       </tr>
     ));
   }, [data]);
 
   const totalClientes = useMemo(() => {
-
-    return (
-        <span>{data.meta.total}</span>
-    );
+    return <span>{data.meta.total}</span>;
   }, [data]);
-
 
   if (!tableRows) {
     return <div>Data structure is not as expected.</div>;
@@ -107,10 +110,10 @@ function DashboardView({ data, loading, onPageChange, onPerPageChange, perPage, 
                     pageRangeDisplayed={3}
                     marginPagesDisplayed={3}
                     onPageChange={handlePageChange}
-                    containerClassName={'pagination'}
-                    activeClassName={'active'}
-                    previousLabel={'Previous'}
-                    nextLabel={'Next'}
+                    containerClassName={"pagination"}
+                    activeClassName={"active"}
+                    previousLabel={"Previous"}
+                    nextLabel={"Next"}
                     initialPage={currentPage - 1}
                   />
                   <select onChange={handlePerPageChange} value={perPage}>

@@ -28,7 +28,6 @@ function ClientDetailView({ data, loading }) {
       uf: data.address?.uf || "",
       complement: data.address?.complement || ""
     },
-    monthly_value = data.monthly_value || 0,
     due_date = data.due_date || "",
     calc = {
       number_clients: data.calc.number_clients,
@@ -49,7 +48,6 @@ function ClientDetailView({ data, loading }) {
       email: contact.email,
       phone: contact.phone,
     },
-    monthly_value,
     due_date,
     address: { 
       cep: address.cep,
@@ -92,16 +90,16 @@ function ClientDetailView({ data, loading }) {
         ...prevData,
         [nestedKey]: {
           ...prevData[nestedKey],
-          [nestedProp]: value,
+          [nestedProp]: ['due_date', 'value', 'number_clients'].includes(nestedProp) ? Number(value) : value,
         },
       }));
     } else {
       setFormData((prevData) => ({
         ...prevData,
-        [name]: value,
+        [name]: ['due_date', 'calc.value', 'calc.number_clients'].includes(name) ? Number(value) : value,
       }));
     }
-  };
+  };  
 
   const handleCEPChange = async (event) => {
     const enteredCEP = event.target.value.replace(/\D/g, ""); // Remove non-numeric characters
@@ -166,6 +164,19 @@ function ClientDetailView({ data, loading }) {
       // Handle network errors or other exceptions
     }
   };
+
+  const formatNumber = (number) =>{
+    // número = +5599999999999
+    const cleaned = ('' + number).replace(/\D/g, '');
+    // número = 5599999999999
+    const match = cleaned.match(/^(\d{2})(\d{4}|\d{5})(\d{4})$/);
+    // número = 55 99 99999 9999
+    if (match) {
+        return ['(', match[1], ')', match[2], '-', match[3]].join('')
+    }
+    // número = (99) 99999-9999
+    return '';
+}
 
   return (
     <>
@@ -235,12 +246,10 @@ function ClientDetailView({ data, loading }) {
                         <label>Telefone</label>
                         <Form.Control
                           placeholder="Telefone"
-                          type="phone"
+                          type="text"
                           name="contact.phone"
-                          value={formatPhone(formData.contact.phone)}
-                          maxLength="15"
-                          onChange={handleInputChange}
-                        />
+                          value={formatNumber(formData.contact.phone)}
+                          maxLength="15"                        />
                       </Form.Group>
                     </Col>
                   </Row>
@@ -341,8 +350,8 @@ function ClientDetailView({ data, loading }) {
                           placeholder="Valor mensal"
                           type="number"
                           step="0.1"
-                          name="monthly_value"
-                          value={formData.monthly_value}
+                          name="calc.value"
+                          value={formData.calc.value}
                           onChange={handleInputChange}
                         />
                       </Form.Group>
